@@ -50,23 +50,23 @@ impl<'a> Parser<'a> {
             match token.token_type {
                 TokenType::Comment(_) => {
                     let comment = self.consume_next();
-                    return StatementWrapper::new(Statement::Comment { comment }, false);
+                    return Statement::new(Statement::Comment { comment });
                 }
                 TokenType::MultilineComment(_) => {
                     let multiline_comment = self.consume_next();
-                    return StatementWrapper::new(Statement::MultilineComment { multiline_comment }, false);
+                    return Statement::new(Statement::MultilineComment { multiline_comment });
                 }
                 TokenType::RegionBegin(_) => {
                     let token = self.consume_next();
-                    return StatementWrapper::new(Statement::RegionBegin(token), false);
+                    return Statement::new(Statement::RegionBegin(token));
                 }
                 TokenType::RegionEnd(_) => {
                     let token = self.consume_next();
-                    return StatementWrapper::new(Statement::RegionEnd(token), false);
+                    return Statement::new(Statement::RegionEnd(token));
                 }
                 TokenType::Macro(_) => {
                     let token = self.consume_next();
-                    return StatementWrapper::new(Statement::Macro(token), false);
+                    return Statement::new(Statement::Macro(token));
                 }
                 TokenType::Define => {
                     self.consume_next();
@@ -138,7 +138,7 @@ impl<'a> Parser<'a> {
             }
         }
 
-        StatementWrapper::new(
+        Statement::new(
             Statement::Define {
                 comments_after_control_word,
                 script_name,
@@ -154,7 +154,7 @@ impl<'a> Parser<'a> {
         let var_decl = self.var_declaration();
         let has_semicolon = self.check_next_consume(TokenType::Semicolon);
 
-        StatementWrapper::new(
+        Statement::new(
             Statement::VariableDeclList {
                 starting_var_type,
                 var_decl,
@@ -213,7 +213,12 @@ impl<'a> Parser<'a> {
                     // Ah shit you suck.
                     let has_semicolon = self.check_next_consume(TokenType::Semicolon);
                     self.check_leftovers = true;
-                    self.leftover_stmts.push(StatementWrapper::new(Statement::ExpresssionStatement { expression: var_expr }, has_semicolon));
+                    self.leftover_stmts.push(StatementWrapper::new(
+                        Statement::ExpresssionStatement {
+                            expression: var_expr,
+                        },
+                        has_semicolon,
+                    ));
                     end_delimiter = true; // we never woulda gotten here if not for you cursed end delimiters!
                     break;
                 }
@@ -515,7 +520,10 @@ impl<'a> Parser<'a> {
     fn expression_statement(&mut self) -> StmtBox<'a> {
         let expr = self.expression();
         let has_semicolon = self.check_next_consume(TokenType::Semicolon);
-        StatementWrapper::new(Statement::ExpresssionStatement { expression: expr }, has_semicolon)
+        StatementWrapper::new(
+            Statement::ExpresssionStatement { expression: expr },
+            has_semicolon,
+        )
     }
 
     fn expression(&mut self) -> ExprBox<'a> {
@@ -542,7 +550,8 @@ impl<'a> Parser<'a> {
                     | TokenType::BitAndEquals
                     | TokenType::ModEquals => {
                         let operator = self.scanner.next().unwrap();
-                        let comments_and_newlines_between_op_and_r = self.get_newlines_and_comments();
+                        let comments_and_newlines_between_op_and_r =
+                            self.get_newlines_and_comments();
                         let assignment_expr = self.assignment();
 
                         expr = self.create_expr_box_no_comment(Expr::Assign {
@@ -671,9 +680,13 @@ impl<'a> Parser<'a> {
         if self.can_pair {
             while let Some(t) = self.scanner.peek() {
                 match t.token_type {
-                    TokenType::Greater | TokenType::GreaterEqual | TokenType::Less | TokenType::LessEqual => {
+                    TokenType::Greater
+                    | TokenType::GreaterEqual
+                    | TokenType::Less
+                    | TokenType::LessEqual => {
                         let t = self.scanner.next().unwrap();
-                        let comments_and_newlines_between_op_and_r = self.get_newlines_and_comments();
+                        let comments_and_newlines_between_op_and_r =
+                            self.get_newlines_and_comments();
                         let right = self.binary();
 
                         expr = self.create_expr_box_no_comment(Expr::Binary {
@@ -699,7 +712,8 @@ impl<'a> Parser<'a> {
                 match t.token_type {
                     TokenType::BitAnd | TokenType::BitOr | TokenType::BitXor => {
                         let t = self.scanner.next().unwrap();
-                        let comments_and_newlines_between_op_and_r = self.get_newlines_and_comments();
+                        let comments_and_newlines_between_op_and_r =
+                            self.get_newlines_and_comments();
                         let right = self.bitshift();
 
                         expr = self.create_expr_box_no_comment(Expr::Binary {
@@ -725,7 +739,8 @@ impl<'a> Parser<'a> {
                 match t.token_type {
                     TokenType::BitLeft | TokenType::BitRight => {
                         let t = self.scanner.next().unwrap();
-                        let comments_and_newlines_between_op_and_r = self.get_newlines_and_comments();
+                        let comments_and_newlines_between_op_and_r =
+                            self.get_newlines_and_comments();
                         let right = self.addition();
 
                         expr = self.create_expr_box_no_comment(Expr::Binary {
@@ -751,7 +766,8 @@ impl<'a> Parser<'a> {
                 match t.token_type {
                     TokenType::Minus | TokenType::Plus => {
                         let token = self.scanner.next().unwrap();
-                        let comments_and_newlines_between_op_and_r = self.get_newlines_and_comments();
+                        let comments_and_newlines_between_op_and_r =
+                            self.get_newlines_and_comments();
                         let right = self.multiplication();
 
                         expr = self.create_expr_box_no_comment(Expr::Binary {
@@ -775,9 +791,14 @@ impl<'a> Parser<'a> {
         if self.can_pair {
             while let Some(t) = self.scanner.peek() {
                 match t.token_type {
-                    TokenType::Slash | TokenType::Star | TokenType::Mod | TokenType::ModAlias | TokenType::Div => {
+                    TokenType::Slash
+                    | TokenType::Star
+                    | TokenType::Mod
+                    | TokenType::ModAlias
+                    | TokenType::Div => {
                         let token = self.scanner.next().unwrap();
-                        let comments_and_newlines_between_op_and_r = self.get_newlines_and_comments();
+                        let comments_and_newlines_between_op_and_r =
+                            self.get_newlines_and_comments();
                         let right = self.unary();
 
                         expr = self.create_expr_box_no_comment(Expr::Binary {
@@ -799,7 +820,11 @@ impl<'a> Parser<'a> {
         if self.can_pair {
             if let Some(t) = self.scanner.peek() {
                 match t.token_type {
-                    TokenType::Bang | TokenType::Minus | TokenType::Plus | TokenType::Tilde | TokenType::NotAlias => {
+                    TokenType::Bang
+                    | TokenType::Minus
+                    | TokenType::Plus
+                    | TokenType::Tilde
+                    | TokenType::NotAlias => {
                         let t = self.scanner.next().unwrap();
                         let comments_and_newlines_between = self.get_newlines_and_comments();
                         let right = self.unary();
@@ -995,7 +1020,8 @@ impl<'a> Parser<'a> {
                         self.failure = Some(format!("Error parsing {}", t));
                     }
 
-                    return self.create_comment_expr_box(Expr::UnidentifiedAsLiteral { literal_token: t });
+                    return self
+                        .create_comment_expr_box(Expr::UnidentifiedAsLiteral { literal_token: t });
                 }
             }
         }
@@ -1004,7 +1030,11 @@ impl<'a> Parser<'a> {
         self.create_expr_box_no_comment(Expr::UnexpectedEnd)
     }
 
-    fn finish_call(&mut self, end_token_type: TokenType, delimiter_type: TokenType) -> DelimitedLines<'a, ExprBox<'a>> {
+    fn finish_call(
+        &mut self,
+        end_token_type: TokenType,
+        delimiter_type: TokenType,
+    ) -> DelimitedLines<'a, ExprBox<'a>> {
         let mut arguments = Vec::new();
 
         let mut end_delimiter = true;
@@ -1020,7 +1050,10 @@ impl<'a> Parser<'a> {
 
                 let trailing_comment = self.get_newlines_and_comments();
 
-                arguments.push(DelimitedLine { expr, trailing_comment });
+                arguments.push(DelimitedLine {
+                    expr,
+                    trailing_comment,
+                });
 
                 if do_break {
                     end_delimiter = false;

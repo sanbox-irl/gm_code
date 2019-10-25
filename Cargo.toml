@@ -1,6 +1,6 @@
 [package]
-name = "gml_fmt"
-version = "1.0.1"
+name = "gm_code"
+version = "0.0.1"
 authors = ["Jack Spira <jjspira@gmail.com>"]
 edition = "2018"
 
@@ -14,4 +14,4 @@ toml = "0.5.2"
 logos = "0.9.7"
 
 [[bin]]
-name = "gml_fmt"
+name = "gm_code"

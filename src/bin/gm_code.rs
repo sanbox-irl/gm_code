@@ -3,8 +3,8 @@ extern crate logos;
 extern crate serde;
 
 use clap::{App, Arg};
-use gml_fmt::config::Config;
-use gml_fmt::config::PrintFlags;
+use gm_code::config::Config;
+use gm_code::config::PrintFlags;
 use std::{path::PathBuf, process};
 
 
@@ -41,7 +41,7 @@ fn main() {
 
     // Get our path and make our lang_config file
     let our_path = std::env::current_dir().unwrap();
-    let lang_config = gml_fmt::lang_config::LangConfig::new(&our_path);
+    let lang_config = gm_code::lang_config::LangConfig::new(&our_path);
 
     // Get Path
     let input_path = if matches.is_present("PATH") {
@@ -73,7 +73,7 @@ fn main() {
         process::exit(1);
     });
 
-    match gml_fmt::run_config(&config, &lang_config) {
+    match gm_code::run_config(&config, &lang_config) {
         Ok(()) => {
             println!("Format complete.");
         }

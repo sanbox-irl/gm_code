@@ -1,26 +1,12 @@
 use super::expressions::*;
 use super::lex_token::Token;
 
-pub type StmtBox<'a> = Box<StatementWrapper<'a>>;
+pub type StmtBox<'a> = Box<Statement<'a>>;
 pub type ParenInfo = (bool, bool);
-#[derive(Debug)]
-pub struct DelimitedLines<'a, T> {
-    pub lines: Vec<DelimitedLine<'a, T>>,
-    pub has_end_delimiter: bool,
-}
 
-#[derive(Debug)]
-pub struct StatementWrapper<'a> {
-    pub statement: Statement<'a>,
-    pub has_semicolon: bool,
-}
-
-impl<'a> StatementWrapper<'a> {
-    pub fn new(statement: Statement<'a>, has_semicolon: bool) -> Box<StatementWrapper<'a>> {
-        Box::new(StatementWrapper {
-            statement,
-            has_semicolon,
-        })
+impl<'a> Statement<'a> {
+    pub fn new(statement: Statement<'a>) -> StmtBox<'a> {
+        Box::new(statement)
     }
 
     pub fn hold_expr(&self) -> bool {
@@ -129,10 +115,4 @@ pub struct VariableDecl<'a> {
     pub var_expr: ExprBox<'a>,
     pub say_var: Option<Token<'a>>,
     pub say_var_comments: Option<CommentsAndNewlines<'a>>,
-}
-
-#[derive(Debug)]
-pub struct DelimitedLine<'a, T> {
-    pub expr: T,
-    pub trailing_comment: CommentsAndNewlines<'a>,
 }
